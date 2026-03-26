@@ -1,48 +1,43 @@
 package com.sijo.drone.domain;
 
+import com.sijo.drone.utils.Pose;
+
 import java.util.Objects;
 import java.util.logging.Logger;
 
 public class Drone implements Moveable {
     private static final Logger LOG = Logger.getLogger(Drone.class.getName());
 
-    private long x;
-    private long y;
-    private Direction direction;
+    private Pose pose;
 
-    public Drone(long x, long y, Direction direction) {
-        if(x < 0) {
-            throw new IllegalArgumentException("Axis x can't be negative. x = " + x);
-        }
-        if(y < 0) {
-            throw new IllegalArgumentException("Axis y can't be negative. y = " + y);
-        }
+    public Drone(Pose pose, Board board) {
+        Objects.requireNonNull(pose, "Pose must not be null.");
+        Objects.requireNonNull(board, "Board must not be null.");
 
-        if(direction == null) {
-            throw new IllegalArgumentException("Direction can't be null.");
-        }
+        this.pose = pose;
 
-        this.x = x;
-        this.y = y;
-        this.direction = direction;
+        if(isOutOfBound(board)) {
+            throw new IllegalArgumentException(
+                    "Initial position is out of bound: length=" + board.length() + ", height=" + board.height() +
+                            "Coordinates: " + pose
+            );
+        }
     }
 
     @Override
     public boolean isOutOfBound(Board board) {
-        return (x < 0 || x > board.length()) || (y < 0 || y > board.height());
+        return pose.isOutOfBound(board.length(), board.height());
     }
 
     @Override
     public boolean forward(Board board) {
-        long savedX = x;
-        long savedY = y;
-
-        switch(direction) {
-            case NORTH -> y++;
-            case EAST -> x++;
-            case SOUTH -> y--;
-            case WEST -> x--;
-        }
+        Pose savedPose = pose;
+        pose = switch(pose.direction()) {
+            case NORTH -> new Pose(pose.x(), pose.y() + 1, pose.direction());
+            case EAST -> new Pose(pose.x() + 1, pose.y(), pose.direction());
+            case SOUTH -> new Pose(pose.x(), pose.y() - 1, pose.direction());
+            case WEST -> new Pose(pose.x() - 1, pose.y(), pose.direction());
+        };
 
         if(isOutOfBound(board)) {
             LOG.warning(
@@ -50,8 +45,7 @@ public class Drone implements Moveable {
                     "(lenght: " + board.length() + ", height: " + board.height() + ")\n"+
                     "Drone position: " + this
             );
-            x = savedX;
-            y = savedY;
+            pose = savedPose;
             return false;
         }
 
@@ -60,12 +54,12 @@ public class Drone implements Moveable {
 
     @Override
     public void turnRight() {
-        direction = direction.turnRight();
+        pose = new Pose(pose.x(), pose.y(), pose.direction().turnRight());
     }
 
     @Override
     public void turnLeft() {
-        direction = direction.turnLeft();
+        pose = new Pose(pose.x(), pose.y(), pose.direction().turnLeft());
     }
 
     @Override
@@ -81,23 +75,20 @@ public class Drone implements Moveable {
                 case 'F' -> forward(board);
                 case 'L' -> turnLeft();
                 case 'R' -> turnRight();
+                default -> LOG.warning("Unknown instruction: " + instruction + " ignored.");
             }
         }
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (!(object instanceof Drone drone)) return false;
-        return x == drone.x && y == drone.y && direction == drone.direction;
-    }
+
 
     @Override
     public int hashCode() {
-        return Objects.hash(x, y, direction);
+        return Objects.hash(pose);
     }
 
     @Override
     public String toString() {
-        return x + " " + y + " " + direction;
+        return pose.x() + " " + pose.y() + " " + pose.direction();
     }
 }

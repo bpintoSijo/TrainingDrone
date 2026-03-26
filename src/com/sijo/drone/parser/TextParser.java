@@ -3,9 +3,10 @@ package com.sijo.drone.parser;
 import com.sijo.drone.domain.Board;
 import com.sijo.drone.domain.Direction;
 import com.sijo.drone.domain.Moveable;
-import com.sijo.drone.utils.TriFunction;
+import com.sijo.drone.utils.Pose;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 
 /**
  * String parser to create board and moveable objects from a text file.
@@ -26,11 +27,15 @@ public class TextParser implements InputParser {
         if(values.length < 2) {
             throw new IllegalArgumentException("Could not parse board correctly. Input: " + input);
         }
-        return new Board(Long.parseLong(values[0]), Long.parseLong(values[1]));
+        try {
+            return new Board(Long.parseLong(values[0]), Long.parseLong(values[1]));
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Could not parse board correctly with Input: " + input);
+        }
     }
 
     @Override
-    public Moveable parseMoveable(TriFunction<Long, Long, Direction, ? extends Moveable> factory, String positionLine) {
+    public Moveable parseMoveable(BiFunction<? super Pose, ? super Board, ? extends Moveable> factory, Board board, String positionLine) {
         Objects.requireNonNull(positionLine, "Couldn't parse position because string is null.");
 
         String[] positionValues = positionLine.split(" ");
@@ -40,9 +45,10 @@ public class TextParser implements InputParser {
             );
         }
 
-        Long x = Long.parseLong(positionValues[0]);
-        Long y = Long.parseLong(positionValues[1]);
+        long x = Long.parseLong(positionValues[0]);
+        long y = Long.parseLong(positionValues[1]);
         Direction direction = Direction.parseDirection(positionValues[2]);
-        return factory.apply(x, y, direction);
+        Pose pose = new Pose(x, y, direction);
+        return factory.apply(pose, board);
     }
 }

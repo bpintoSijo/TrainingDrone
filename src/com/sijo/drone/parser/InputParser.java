@@ -1,9 +1,10 @@
 package com.sijo.drone.parser;
 
 import com.sijo.drone.domain.Board;
-import com.sijo.drone.domain.Direction;
 import com.sijo.drone.domain.Moveable;
-import com.sijo.drone.utils.TriFunction;
+import com.sijo.drone.utils.Pose;
+
+import java.util.function.BiFunction;
 
 /**
  * Interface to parse string input
@@ -23,5 +24,5 @@ public interface InputParser {
      * @return A moveable object.
      *
      */
-    Moveable parseMoveable(TriFunction<Long, Long, Direction, ? extends Moveable> factory, String positionLine);
+    Moveable parseMoveable(BiFunction<? super Pose, ? super Board, ? extends Moveable> factory,  Board board, String positionLine);
 }

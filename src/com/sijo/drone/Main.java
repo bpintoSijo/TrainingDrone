@@ -32,12 +32,12 @@ public class Main {
             }
 
             if(board == null) {
-                LOG.severe("Could not parse first line into board.");
+                LOG.severe("Could not parse first line into board. Please check your file.");
                 System.exit(1);
             }
 
             while (scanner.hasNextLine()) {
-                Moveable moveable = parser.parseMoveable(Drone::new, scanner.nextLine());
+                Moveable moveable = parser.parseMoveable(Drone::new, board, scanner.nextLine());
                 if(scanner.hasNextLine()) {
                     String instructions = scanner.nextLine();
                     moveable.executeInstructions(board, instructions);
