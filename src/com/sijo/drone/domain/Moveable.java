@@ -25,4 +25,10 @@ public interface Moveable {
      * Turn left
      * */
     void turnLeft();
+
+    /**
+     * Execute given instructions
+     * @param instructions to execute
+     * */
+    void executeInstructions(Board board, String instructions);
 }

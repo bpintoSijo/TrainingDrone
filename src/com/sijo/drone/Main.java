@@ -1,3 +1,11 @@
+package com.sijo.drone;
+
+import com.sijo.drone.domain.Board;
+import com.sijo.drone.domain.Drone;
+import com.sijo.drone.domain.Moveable;
+import com.sijo.drone.parser.InputParser;
+import com.sijo.drone.parser.TextParser;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,15 +23,26 @@ public class Main {
             System.exit(1);
         }
 
+        InputParser parser = TextParser.getInstance();
+
         try (Scanner scanner = new Scanner(new File(args[0]), StandardCharsets.UTF_8)) {
+            Board board = null;
             if(scanner.hasNextLine()) {
-                String boardLimits = scanner.nextLine();
-                System.out.println(boardLimits);
+                board = parser.parseBoard(scanner.nextLine());
+            }
+
+            if(board == null) {
+                LOG.severe("Could not parse first line into board.");
+                System.exit(1);
             }
 
             while (scanner.hasNextLine()) {
-                String ligne = scanner.nextLine();
-                System.out.println(ligne);
+                Moveable moveable = parser.parseMoveable(Drone::new, scanner.nextLine());
+                if(scanner.hasNextLine()) {
+                    String instructions = scanner.nextLine();
+                    moveable.executeInstructions(board, instructions);
+                }
+                System.out.println(moveable);
             }
         } catch (FileNotFoundException e) {
             LOG.severe("Error: Could not find file " + args[0]);
